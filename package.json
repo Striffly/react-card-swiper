@@ -30,11 +30,11 @@
     "build": "rm -rf dist && vite build",
     "build:web": "vite build src/demo",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "prepare": "npm run build",
+    "prepare": "yarn build",
     "preview": "vite preview",
-    "pub:patch": "npm version patch --force",
-    "pub:minor": "npm version minor --force",
-    "pub:major": "npm version major --force"
+    "pub:patch": "yarn version --patch --force",
+    "pub:minor": "yarn version --minor --force",
+    "pub:major": "yarn version --major --force"
   },
   "dependencies": {
     "react": "^18.2.0",
