@@ -58,7 +58,7 @@ export const CardSwiper = (props: CardSwiperProps) => {
           {content && <div className="swipe-card__content">{content}</div>}
         </div>
       )),
-    [],
+    [dynamicData],
   )
 
   useEffect(() => {

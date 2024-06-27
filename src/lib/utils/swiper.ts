@@ -156,12 +156,11 @@ export class Swiper implements SwiperProps {
     if (this.isTouchDevice) this.element.removeEventListener('touchstart', this.handleTouchStart.bind(this))
     if (!this.isTouchDevice) this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this))
     if (!this.isTouchDevice) this.element.removeEventListener('dragstart', this.handleDragStart.bind(this))
-    this.element.style.transition = 'all 0.6s'
+    this.element.style.transition = 'all 0.5s'
     this.element.style.transform = `translate(${direction * window.innerWidth * 2}px, ${this.offsetY}px) rotate(${
       60 * direction
     }deg)`
-    this.element.classList.add('dismissing')
-    setTimeout(() => this.element.remove(), 300)
+    // this.element.classList.add('dismissing')
 
     if (typeof this.onDismiss === 'function') {
       const swipeDirection = direction === 1 ? SwipeAction.LIKE : SwipeAction.DISLIKE

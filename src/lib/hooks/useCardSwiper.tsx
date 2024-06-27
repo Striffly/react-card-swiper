@@ -39,6 +39,13 @@ export const useCardSwiper = ({ onDismiss, onFinish, onEnter, data }: UseCardSwi
     action: SwipeAction,
     operation: SwipeOperation,
   ) => {
+    setTimeout(
+      () => {
+        setDynamicData((prevData) => prevData.filter((card) => card.id !== id))
+      },
+      operation === SwipeOperation.CLICK ? 300 : 0,
+    )
+
     setSwiperIndex((prev) => prev - 1)
     onDismiss && onDismiss(element, meta, id, action, operation)
     swiperElements.current.pop()
