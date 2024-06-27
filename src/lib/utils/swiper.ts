@@ -1,4 +1,5 @@
 import { CardEvent, CardId, CardMetaData, SwipeAction, SwipeOperation, SwiperProps } from '../types/types'
+import { gsap } from 'gsap'
 
 interface StartPoint {
   x: number
@@ -53,7 +54,11 @@ export class Swiper implements SwiperProps {
 
     this.offsetX = x - this.startPoint.x
     const rotate = this.offsetX * 0.07
-    this.element.style.transform = `translate(${this.offsetX}px,0) rotate(${rotate}deg)`
+    gsap.set(this.element, {
+      x: this.offsetX,
+      y: 0,
+      rotation: rotate,
+    })
     // dismiss card
     if (Math.abs(this.offsetX) > this.element.clientWidth * 0.4) {
       this.dismiss(this.offsetX > 0 ? 1 : -1)
@@ -115,8 +120,8 @@ export class Swiper implements SwiperProps {
 
     this.startPoint = null
     this.useMouseMoveEvent = false
-    this.element.style.transform = ''
     this.element.style.transition = 'all .5s'
+    gsap.set(this.element, { clearProps: 'transform' })
     this.hideRibbons()
   }
 
@@ -146,8 +151,8 @@ export class Swiper implements SwiperProps {
 
     this.startPoint = null
     this.useTouchMoveEvent = false
-    this.element.style.transform = ''
     this.element.style.transition = 'all .5s'
+    gsap.set(this.element, { clearProps: 'transform' })
     this.hideRibbons()
   }
 
@@ -157,9 +162,11 @@ export class Swiper implements SwiperProps {
     if (!this.isTouchDevice) this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this))
     if (!this.isTouchDevice) this.element.removeEventListener('dragstart', this.handleDragStart.bind(this))
     this.element.style.transition = 'all 0.6s'
-    this.element.style.transform = `translate(${direction * window.innerWidth * 2}px, ${this.offsetY}px) rotate(${
-      60 * direction
-    }deg)`
+    gsap.set(this.element, {
+      x: direction * window.innerWidth * 2,
+      y: this.offsetY,
+      rotation: 60 * direction,
+    })
     this.element.classList.add('dismissing')
     setTimeout(() => this.element.remove(), 300)
 
