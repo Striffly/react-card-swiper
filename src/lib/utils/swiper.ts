@@ -24,13 +24,12 @@ export class Swiper implements SwiperProps {
   private startPoint: StartPoint | null = { x: 0, y: 0 }
   private offsetX = 0
   private offsetY = 0
-
-  private isTouchDevice = () => {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0
-  }
+  private useMouseMoveEvent = false
+  private useTouchMoveEvent = false
+  private isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
 
   private init = () => {
-    if (this.isTouchDevice()) {
+    if (this.isTouchDevice) {
       this.listenToTouchEvents()
     } else {
       this.listenToMouseEvents()
@@ -38,33 +37,14 @@ export class Swiper implements SwiperProps {
   }
 
   private listenToTouchEvents = () => {
-    this.element.addEventListener('touchstart', (e) => {
-      const touch = e.changedTouches[0]
-      if (!touch) return
-      const { clientX, clientY } = touch
-      this.startPoint = { x: clientX, y: clientY }
-      document.addEventListener('touchmove', this.handleTouchMove)
-      this.element.style.transition = 'transform 0s'
-    })
-
-    document.addEventListener('touchend', this.handleTouchEnd)
-    document.addEventListener('cancel', this.handleTouchEnd)
+    this.element.addEventListener('touchstart', this.handleTouchStart.bind(this))
   }
 
   private listenToMouseEvents = () => {
-    this.element.addEventListener('mousedown', (e) => {
-      const { clientX, clientY } = e
-      this.startPoint = { x: clientX, y: clientY }
-      document.addEventListener('mousemove', this.handleMouseMove)
-      this.element.style.transition = 'transform 0s'
-    })
-
-    document.addEventListener('mouseup', this.handleMoveUp)
+    this.element.addEventListener('mousedown', this.handleMouseDown.bind(this))
 
     // prevent card from being dragged
-    this.element.addEventListener('dragstart', (e) => {
-      e.preventDefault()
-    })
+    this.element.addEventListener('dragstart', this.handleDragStart.bind(this))
   }
 
   private handleMove = (x: number, _y: number) => {
@@ -104,8 +84,26 @@ export class Swiper implements SwiperProps {
     ribbonDislike?.classList.remove('show')
   }
 
+  handleDragStart = (e: MouseEvent) => {
+    if (this.isTouchDevice) return
+
+    e.preventDefault()
+  }
+
+  handleMouseDown = (e: MouseEvent) => {
+    if (this.isTouchDevice) return
+
+    const { clientX, clientY } = e
+    this.startPoint = { x: clientX, y: clientY }
+    this.useMouseMoveEvent = true
+    this.element.style.transition = 'transform 0s'
+  }
+
   // mouse event handlers
-  private handleMouseMove = (e: MouseEvent) => {
+  handleMouseMove = (e: MouseEvent) => {
+    if (this.isTouchDevice) return
+    if (!this.useMouseMoveEvent) return
+
     e.preventDefault()
     if (!this.startPoint) return
     const { clientX, clientY } = e
@@ -113,15 +111,29 @@ export class Swiper implements SwiperProps {
   }
 
   handleMoveUp = () => {
+    if (this.isTouchDevice) return
+
     this.startPoint = null
-    document.removeEventListener('mousemove', this.handleMouseMove)
+    this.useMouseMoveEvent = false
     this.element.style.transform = ''
     this.element.style.transition = 'all .5s'
     this.hideRibbons()
   }
 
+  handleTouchStart = (e: TouchEvent) => {
+    if (!this.isTouchDevice) return
+
+    const touch = e.changedTouches[0]
+    if (!touch) return
+    const { clientX, clientY } = touch
+    this.startPoint = { x: clientX, y: clientY }
+    this.useTouchMoveEvent = true
+    this.element.style.transition = 'transform 0s'
+  }
+
   // touch event handlers
-  private handleTouchMove = (e: TouchEvent) => {
+  handleTouchMove = (e: TouchEvent) => {
+    if (!this.useTouchMoveEvent) return
     if (!this.startPoint) return
     const touch = e.changedTouches[0]
     if (!touch) return
@@ -130,8 +142,10 @@ export class Swiper implements SwiperProps {
   }
 
   handleTouchEnd = () => {
+    if (!this.isTouchDevice) return
+
     this.startPoint = null
-    document.removeEventListener('touchmove', this.handleTouchMove)
+    this.useTouchMoveEvent = false
     this.element.style.transform = ''
     this.element.style.transition = 'all .5s'
     this.hideRibbons()
@@ -139,10 +153,9 @@ export class Swiper implements SwiperProps {
 
   private dismiss = (direction: number, swipeOperation: SwipeOperation = SwipeOperation.SWIPE) => {
     this.startPoint = null
-    document.removeEventListener('mouseup', this.handleMoveUp)
-    document.removeEventListener('mousemove', this.handleMouseMove)
-    document.removeEventListener('touchend', this.handleTouchEnd)
-    document.removeEventListener('touchmove', this.handleTouchMove)
+    if (this.isTouchDevice) this.element.removeEventListener('touchstart', this.handleTouchStart.bind(this))
+    if (!this.isTouchDevice) this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this))
+    if (!this.isTouchDevice) this.element.removeEventListener('dragstart', this.handleDragStart.bind(this))
     this.element.style.transition = 'all 0.6s'
     this.element.style.transform = `translate(${direction * window.innerWidth * 2}px, ${this.offsetY}px) rotate(${
       60 * direction

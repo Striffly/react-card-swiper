@@ -1,6 +1,6 @@
 import '../main.css'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useCardSwiper } from '../hooks/useCardSwiper'
 import { CardSwiperProps, SwipeAction, SwipeDirection } from '../types/types'
 import { Swiper } from '../utils/swiper'
@@ -75,6 +75,61 @@ export const CardSwiper = (props: CardSwiperProps) => {
 
     return () => window.removeEventListener('blur', handleWindowBlur)
   }, [currentSwiper])
+
+  const onMouseUpRef = useRef<(e: MouseEvent) => void>()
+  const onMouseMoveRef = useRef<(e: MouseEvent) => void>()
+  const onTouchEndRef = useRef<(e: TouchEvent) => void>()
+  const onTouchMoveRef = useRef<(e: TouchEvent) => void>()
+  const onCancelRef = useRef<() => void>()
+
+  useEffect(() => {
+    onMouseUpRef.current = () => {
+      swiperElements.current[swiperIndex - 1]?.handleMoveUp()
+    }
+    onMouseMoveRef.current = (e: MouseEvent) => {
+      swiperElements.current[swiperIndex - 1]?.handleMouseMove(e)
+    }
+    onTouchEndRef.current = () => {
+      swiperElements.current[swiperIndex - 1]?.handleTouchEnd()
+    }
+    onTouchMoveRef.current = (e: TouchEvent) => {
+      swiperElements.current[swiperIndex - 1]?.handleTouchMove(e)
+    }
+    onCancelRef.current = () => {
+      swiperElements.current[swiperIndex - 1]?.handleTouchEnd()
+    }
+  }, [swiperIndex, swiperElements])
+
+  useEffect(() => {
+    const onMouseUp = (e: MouseEvent) => onMouseUpRef.current?.(e)
+    const onMouseMove = (e: MouseEvent) => onMouseMoveRef.current?.(e)
+    const onTouchEnd = (e: TouchEvent) => onTouchEndRef.current?.(e)
+    const onTouchMove = (e: TouchEvent) => onTouchMoveRef.current?.(e)
+    const onCancel = () => onCancelRef.current?.()
+
+    if (isFinish) {
+      document.removeEventListener('mouseup', onMouseUp)
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('touchend', onTouchEnd)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('cancel', onCancel)
+    } else {
+      document.addEventListener('mouseup', onMouseUp)
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('touchend', onTouchEnd)
+      document.addEventListener('touchmove', onTouchMove)
+      document.addEventListener('cancel', onCancel)
+    }
+
+    // Retourner une fonction de nettoyage pour supprimer les écouteurs d'événements
+    return () => {
+      document.removeEventListener('mouseup', onMouseUp)
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('touchend', onTouchEnd)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('cancel', onCancel)
+    }
+  }, [isFinish])
 
   return (
     <div className="swipe-card" id="swipe-card">
