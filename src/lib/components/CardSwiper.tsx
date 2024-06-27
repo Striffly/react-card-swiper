@@ -81,6 +81,7 @@ export const CardSwiper = (props: CardSwiperProps) => {
   const onTouchEndRef = useRef<(e: TouchEvent) => void>()
   const onTouchMoveRef = useRef<(e: TouchEvent) => void>()
   const onCancelRef = useRef<() => void>()
+  const handleMoveRef = useRef<() => void>()
 
   useEffect(() => {
     onMouseUpRef.current = () => {
@@ -98,6 +99,9 @@ export const CardSwiper = (props: CardSwiperProps) => {
     onCancelRef.current = () => {
       swiperElements.current[swiperIndex - 1]?.handleTouchEnd()
     }
+    handleMoveRef.current = () => {
+      swiperElements.current[swiperIndex - 1]?.handleMove()
+    }
   }, [swiperIndex, swiperElements])
 
   useEffect(() => {
@@ -107,18 +111,22 @@ export const CardSwiper = (props: CardSwiperProps) => {
     const onTouchMove = (e: TouchEvent) => onTouchMoveRef.current?.(e)
     const onCancel = () => onCancelRef.current?.()
 
-    if (isFinish) {
-      document.removeEventListener('mouseup', onMouseUp)
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('touchend', onTouchEnd)
-      document.removeEventListener('touchmove', onTouchMove)
-      document.removeEventListener('cancel', onCancel)
-    } else {
+    const handleMove = () => handleMoveRef.current?.()
+
+    let animationFrameRaf: number
+
+    const animate = () => {
+      handleMove()
+      animationFrameRaf = requestAnimationFrame(animate)
+    }
+
+    if (!isFinish) {
       document.addEventListener('mouseup', onMouseUp)
       document.addEventListener('mousemove', onMouseMove)
       document.addEventListener('touchend', onTouchEnd)
       document.addEventListener('touchmove', onTouchMove)
       document.addEventListener('cancel', onCancel)
+      animationFrameRaf = requestAnimationFrame(animate)
     }
 
     // Retourner une fonction de nettoyage pour supprimer les écouteurs d'événements
@@ -128,6 +136,7 @@ export const CardSwiper = (props: CardSwiperProps) => {
       document.removeEventListener('touchend', onTouchEnd)
       document.removeEventListener('touchmove', onTouchMove)
       document.removeEventListener('cancel', onCancel)
+      cancelAnimationFrame(animationFrameRaf)
     }
   }, [isFinish])
 
