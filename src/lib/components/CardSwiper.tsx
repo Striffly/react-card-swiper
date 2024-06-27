@@ -9,6 +9,7 @@ import CardSwiperEmptyState from './CardSwiperEmptyState'
 import { CardSwiperLeftActionButton } from './CardSwiperLeftActionButton'
 import CardSwiperRibbons from './CardSwiperRibbons'
 import { CardSwiperRightActionButton } from './CardSwiperRightActionButton'
+import { gsap } from 'gsap'
 
 export const CardSwiper = (props: CardSwiperProps) => {
   const { data, likeButton, dislikeButton, withActionButtons = false, emptyState, onDismiss, onFinish, onEnter } = props
@@ -81,6 +82,7 @@ export const CardSwiper = (props: CardSwiperProps) => {
   const onTouchEndRef = useRef<(e: TouchEvent) => void>()
   const onTouchMoveRef = useRef<(e: TouchEvent) => void>()
   const onCancelRef = useRef<() => void>()
+  const handleMoveRef = useRef<() => void>()
 
   useEffect(() => {
     onMouseUpRef.current = () => {
@@ -98,6 +100,9 @@ export const CardSwiper = (props: CardSwiperProps) => {
     onCancelRef.current = () => {
       swiperElements.current[swiperIndex - 1]?.handleTouchEnd()
     }
+    handleMoveRef.current = () => {
+      swiperElements.current[swiperIndex - 1]?.handleMove()
+    }
   }, [swiperIndex, swiperElements])
 
   useEffect(() => {
@@ -107,18 +112,22 @@ export const CardSwiper = (props: CardSwiperProps) => {
     const onTouchMove = (e: TouchEvent) => onTouchMoveRef.current?.(e)
     const onCancel = () => onCancelRef.current?.()
 
+    const handleMove = () => handleMoveRef.current?.()
+
     if (isFinish) {
       document.removeEventListener('mouseup', onMouseUp)
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('touchend', onTouchEnd)
       document.removeEventListener('touchmove', onTouchMove)
       document.removeEventListener('cancel', onCancel)
+      gsap.ticker.remove(handleMove)
     } else {
       document.addEventListener('mouseup', onMouseUp)
       document.addEventListener('mousemove', onMouseMove)
       document.addEventListener('touchend', onTouchEnd)
       document.addEventListener('touchmove', onTouchMove)
       document.addEventListener('cancel', onCancel)
+      gsap.ticker.add(handleMove)
     }
 
     // Retourner une fonction de nettoyage pour supprimer les écouteurs d'événements
@@ -128,6 +137,7 @@ export const CardSwiper = (props: CardSwiperProps) => {
       document.removeEventListener('touchend', onTouchEnd)
       document.removeEventListener('touchmove', onTouchMove)
       document.removeEventListener('cancel', onCancel)
+      gsap.ticker.remove(handleMove)
     }
   }, [isFinish])
 

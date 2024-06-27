@@ -28,6 +28,7 @@ export class Swiper implements SwiperProps {
   private useMouseMoveEvent = false
   private useTouchMoveEvent = false
   private isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+  private x = 0
 
   private init = () => {
     if (this.isTouchDevice) {
@@ -48,11 +49,15 @@ export class Swiper implements SwiperProps {
     this.element.addEventListener('dragstart', this.handleDragStart.bind(this))
   }
 
-  private handleMove = (x: number, _y: number) => {
+  handleMove = () => {
     if (!this.startPoint) return
+    if (!this.isTouchDevice && !this.useMouseMoveEvent) return
+    if (this.isTouchDevice && !this.useTouchMoveEvent) return
+    if (this.x === 0) return
     this.showRibbons()
 
-    this.offsetX = x - this.startPoint.x
+    this.offsetX = this.x - this.startPoint.x
+
     const rotate = this.offsetX * 0.07
     gsap.set(this.element, {
       x: this.offsetX,
@@ -111,14 +116,15 @@ export class Swiper implements SwiperProps {
 
     e.preventDefault()
     if (!this.startPoint) return
-    const { clientX, clientY } = e
-    this.handleMove(clientX, clientY)
+    const { clientX } = e
+    this.x = clientX
   }
 
   handleMoveUp = () => {
     if (this.isTouchDevice) return
 
     this.startPoint = null
+    this.x = 0
     this.useMouseMoveEvent = false
     this.element.style.transition = 'all .5s'
     gsap.set(this.element, { clearProps: 'transform' })
@@ -142,14 +148,15 @@ export class Swiper implements SwiperProps {
     if (!this.startPoint) return
     const touch = e.changedTouches[0]
     if (!touch) return
-    const { clientX, clientY } = touch
-    this.handleMove(clientX, clientY)
+    const { clientX } = touch
+    this.x = clientX
   }
 
   handleTouchEnd = () => {
     if (!this.isTouchDevice) return
 
     this.startPoint = null
+    this.x = 0
     this.useTouchMoveEvent = false
     this.element.style.transition = 'all .5s'
     gsap.set(this.element, { clearProps: 'transform' })
@@ -158,6 +165,7 @@ export class Swiper implements SwiperProps {
 
   private dismiss = (direction: number, swipeOperation: SwipeOperation = SwipeOperation.SWIPE) => {
     this.startPoint = null
+    gsap.ticker.remove(this.handleMove)
     if (this.isTouchDevice) this.element.removeEventListener('touchstart', this.handleTouchStart.bind(this))
     if (!this.isTouchDevice) this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this))
     if (!this.isTouchDevice) this.element.removeEventListener('dragstart', this.handleDragStart.bind(this))
