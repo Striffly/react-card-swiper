@@ -30,7 +30,6 @@
     "build": "rm -rf dist && vite build",
     "build:web": "vite build src/demo",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "prepare": "yarn build",
     "preview": "vite preview",
     "pub:patch": "yarn version --patch --force",
     "pub:minor": "yarn version --minor --force",
